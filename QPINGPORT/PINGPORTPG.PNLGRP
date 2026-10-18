@@ -1,0 +1,141 @@
+.*=====================================================================*
+.*                                                                     *
+.*  Kurzdokumentation :                                                *
+.*                                                                     *
+.*  Bereich . . . : PINGPORT                                           *
+.*  Objekt  . . . : PINGPORTP                                          *
+.*  Beschreibung  : Tool: Ping with Port                           Ger *
+.*  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
+.*  Datum . . . . : 23.05.2008                                         *
+.*                                                                     *
+.*=====================================================================*
+.*                                                                     *
+.*  This software is free software, you can redistribute it and/or     *
+.*  modify it under the terms of the GNU General Public License (GPL)  *
+.*  as published by the Free Software Foundation.                      *
+.*                                                                     *
+.*  See GNU General Public License for details.                        *
+.*          http://www.opensource.org                                  *
+.*          http://www.opensource.org/licenses/gpl-license.html        *
+.*                                                                     *
+.*=====================================================================*
+.*  History:                                                           *
+.*                                                                     *
+.*  Datum       Name          Änderung                                 *
+.*  ----------  ------------  ---------------------------------------  *
+.*                                                                     *
+.*=====================================================================*
+.* >>PRE-COMPILER<<                                                    *
+.*                                                                     *
+.*   >>CRTCMD<< CRTPNLGRP    PNLGRP(&LI/PINGPORTP) +                   *
+.*                           SRCFILE(&SL/&SF) +                        *
+.*                           SRCMBR(&SM);                              *
+.*                                                                     *
+.*   >>COMPILE<<                                                       *
+.*   >>END-COMPILE<<                                                   *
+.*                                                                     *
+.*   >>EXECUTE<<                                                       *
+.*                                                                     *
+.* >>END-PRE-COMPILER<<                                                *
+.*=====================================================================*
+:PNLGRP.
+.*
+:HELP name='PINGPORT/ALL'.
+:IMHELP name=PINGPORT.
+:IMHELP name='PINGPORT/HOST    '.
+:IMHELP name='PINGPORT/PORT    '.
+:EHELP.
+.*--------------------------------------------------------------------
+.* Hilfetext für den Befehl
+.*--------------------------------------------------------------------
+:HELP NAME='PINGPORT'.
+Ping with Port (PINGPORT) - Help
+:P.
+The Verify TCP/IP Connection with Port (PINGPORT) command tests the
+connectivity between a system and the remote system and port specified
+at the command line.
+.*
+:EHELP.
+.*
+.*--------------------------------------------------------------------
+.* Hilfetext für Schlüsselwort HOST
+.*--------------------------------------------------------------------
+:HELP name='PINGPORT/HOST      '.
+Host name or IP address - Help
+:XH3.Host name or IP address (HOST)
+:P.
+Specifies the remote system name of the host with which
+the Verify TCP/IP operation takes place.  To be
+successful, the name must be valid, and the remote system
+must be able to communicate with the local system.  Also
+there must be a listener running on the remote system and
+listening on the port specified at the :HP2.PORT:EHP2. parameter.
+:P.
+In order to test the connection the command attempts to open a
+connection to the remote system and port. It then immediately
+closes the connection. It does not send any data to the remote
+system.
+.*
+:IMHELP name='COM/REQPARM'.
+.*
+:PARML.
+:PT.:PV.character-value:EPV.
+:PD.Specify the DNS name or IP address of the remote system to be
+verified.
+:EPARML.
+.*
+:EHELP.
+.*
+.*--------------------------------------------------------------------
+.* Hilfetext für Schlüsselwort PORT
+.*--------------------------------------------------------------------
+:HELP name='PINGPORT/PORT      '.
+Port number - Help
+:XH3.Port number (PORT)
+:P.
+Specify the port number of the listener running on the remote system.
+.*
+:IMHELP name='COM/REQPARM'.
+.*
+:PARML.
+:PT.:PV.port-number:EPV.
+:PD.Specify the port number of the listener that is running on
+the remote system.
+:EPARML.
+.*
+:EHELP.
+.*
+.*====================================================================
+.*  Textbausteine, die an mehreren Stellen im Hilfetext
+.*  verwendet werden.
+.*====================================================================
+
+.*=====================================
+.*  Erforderlicher Parameter
+.*=====================================
+:HELP NAME='COM/REQPARM'.
+:P.
+This is a required parameter.
+:P.
+:IMHELP name='COM/VALUES'.
+:EHELP.
+
+.*=====================================
+.*  Optionaler Parameter
+.*=====================================
+:HELP NAME='COM/OPTPARM'.
+:P.
+This is an optional parameter.
+:P.
+:IMHELP name='COM/VALUES'.
+:EHELP.
+
+.*=====================================
+.*  Werteliste
+.*=====================================
+:HELP NAME='COM/VALUES'.
+:P.
+The possible values are:
+:EHELP.
+.*
+:EPNLGRP.
