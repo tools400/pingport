@@ -1,664 +1,648 @@
-      *===============================================================*
-      *                                                               *
-      *  erstellt :  9.11.2007                                        *
-      *                                                               *
-      *===============================================================*
-      *                                                               *
-      *  Kurzdokumentation :                                          *
-      *                                                               *
-      *  Rahmentestprogramm mit Protokollausgabe                      *
-      *  Thema:                                                       *
-      *     Tool: Ping Port                                           *
-      *                                                               *
-      *===============================================================*
-      * >>PRE-COMPILER<<                                              *
-      *                                                               *
-      *   >>CRTCMD<< CRTRPGMOD    MODULE(&LI/&OB) +                   *
-      *                           SRCFILE(&SL/&SF) +                  *
-      *                           SRCMBR(&SM);                        *
-      *                                                               *
-      *   >>COMPILE<<                                                 *
-      *     >>PARM<< TRUNCNBR(*NO);                                   *
-      *     >>PARM<< DBGVIEW(*LIST);                                  *
-      *   >>END-COMPILE<<                                             *
-      *                                                               *
-      *   >>EXECUTE<<                                                 *
-      *                                                               *
-      *   >>CMD<<    CRTPGM       PGM(&LI/&OB) +                      *
-      *                           MODULE(&LI/&OB          +           *
-      *                                          ) +                  *
-      *                           BNDSRVPGM(*LIBL/BASICS1      +      *
-      *                                     *LIBL/PRTLOG       +      *
-      *                                          ) +                  *
-      *                           BNDDIR(*LIBL/QC2LE) +               *
-      *                           DETAIL(*BASIC) +                    *
-      *                           ACTGRP(*NEW);                       *
-      *                                                               *
-      * >>END-PRE-COMPILER<<                                          *
-      *===============================================================*
-     H DEBUG
-     H OPTION(*SRCSTMT : *NODEBUGIO)
-     H DECEDIT('0,') DATEDIT(*DMY.)
-     H DATFMT(*ISO )  TIMFMT(*ISO )
-     H EXPROPTS(*RESDECPOS)
-     H EXTBININT(*YES)
-      *===============================================================*
-      *
-      * ------------------------------------
-      *  Type definitions
-      * ------------------------------------
-      *
-      * ------------------------------------
-      *  External Prototypes
-      * ------------------------------------
-      /COPY QBASICS1,PBASICS1                      SrvPgm: Basics 1
-      /COPY QPRTLOG,PPRTLOG                        SrvPgm: Print log
-      /COPY QPINGPORT,SOCKETLIB                    Socket Library
-      *
-      * ------------------------------------
-      *  Global Fields
-      * ------------------------------------
-      *
-      *  Logger
-     D g_hLogger       S                   like(prtLog_handle_t) inz
-      *
-      * ------------------------------------
-      *  Globale Konstanten
-      * ------------------------------------
-      *
-      * ------------------------------------
-      *  Prototypes
-      * ------------------------------------
-      *
-     D PGM_ENTRY_POINT...
-     D                 PR                  extpgm('PINGPORTR')
-     D gi_host                       64A   const  varying
-     D gi_port                       10I 0 const
-      *
-     D main...
-     D                 PR
-     D i_host                        64A   value  varying
-     D i_port                        10I 0 value
-      *
-      *  Test for errors and log them.
-     D isErrorMsg...
-     D                 PR              N
-     D  i_msg                              const  likeds(msg_t    )
-      *
-      *  Open Logger
-     D openLogger...
-     D                 PR
-     D  i_layout                      1A   value
-     D  i_splF                       10A   value  varying
-     D  i_usrDta                     10A   value  varying
-      *
-      *  Logs a given string.
-     D log...
-     D                 PR
-     D  i_msgText                   256A   const  varying
-      *
-      *  Logs a given message.
-     D logMsg...
-     D                 PR
-     D  i_msg                              const  likeds(msg_t        )
-      *
-      *  Logs a monitored message.
-     D logMonitor...
-     D                 PR                         likeds(msg_t   )
-     D  i_text                      128A   const  varying
-      *
-      *  Close Logger
-     D closeLogger...
-     D                 PR
-      *
-      *  Abrufen letzte Abbruch-Nachricht.
-     D rcvEscMsg...
-     D                 PR                         likeds(msg_t    )
-     D  i_stckCnt                    10I 0 const
-      *
-      *  Abrufen Nachrichtentext für Nachricht.
-     D rtvMsgText...
-     D                 PR          1024A          varying
-     D  i_msg                                     const  likeds(msg_t   )
-      *
-      *  Sends a message to QCMD
-     D sndMsg...
-     D                 PR
-     D  i_text                      128A   value  varying
-     D  i_doSendToExt                  N   VALUE  options(*nopass)
-      *
-      *  Auflösen Hostname nach IP-Adresse
-     D resolveHost...
-     D                 PR            10U 0
-     D  i_host                         *   const  options(*string: *trim)
-      *
-      *===============================================================*
-      *  Program Entry Point
-      *===============================================================*
-     D PGM_ENTRY_POINT...
-     D                 PI
-     D gi_host                       64A   const  varying
-     D gi_port                       10I 0 const
-      *
-      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      /FREE
+**free
+//===============================================================*
+//                                                               *
+//  erstellt :  9.11.2007                                        *
+//                                                               *
+//===============================================================*
+//                                                               *
+//  Kurzdokumentation :                                          *
+//                                                               *
+//  Rahmentestprogramm mit Protokollausgabe                      *
+//  Thema:                                                       *
+//     Tool: Ping Port                                           *
+//                                                               *
+//===============================================================*
+// >>PRE-COMPILER<<                                              *
+//                                                               *
+//   >>CRTCMD<< CRTRPGMOD    MODULE(&LI/&OB) +                   *
+//                           SRCFILE(&SL/&SF) +                  *
+//                           SRCMBR(&SM);                        *
+//                                                               *
+//   >>COMPILE<<                                                 *
+//     >>PARM<< TRUNCNBR(*NO);                                   *
+//     >>PARM<< DBGVIEW(*LIST);                                  *
+//   >>END-COMPILE<<                                             *
+//                                                               *
+//   >>EXECUTE<<                                                 *
+//                                                               *
+//   >>CMD<<    CRTPGM       PGM(&LI/&OB) +                      *
+//                           MODULE(&LI/&OB          +           *
+//                                          ) +                  *
+//                           BNDSRVPGM(*LIBL/BASICS1      +      *
+//                                     *LIBL/PRTLOG       +      *
+//                                          ) +                  *
+//                           BNDDIR(*LIBL/QC2LE) +               *
+//                           DETAIL(*BASIC) +                    *
+//                           ACTGRP(*NEW);                       *
+//                                                               *
+// >>END-PRE-COMPILER<<                                          *
+//===============================================================*
+ctl-opt debug option(*srcstmt: *nodebugio);
+ctl-opt decedit('0,') datedit(*DMY.);
+ctl-opt datfmt(*iso) timfmt(*iso);
+ctl-opt expropts(*resdecpos);
+ctl-opt extbinint(*yes);
+//===============================================================*
+//
+// ------------------------------------
+//  Type definitions
+// ------------------------------------
+//
+// ------------------------------------
+//  External Prototypes
+// ------------------------------------
+/copy QBASICS1,PBASICS1 SrvPgm: Basics 1
+/copy QPRTLOG,PPRTLOG SrvPgm: Print log
+/copy QPINGPORT,SOCKETLIB Socket Library
 
-         //openLogger('L': sds.pgmName: '???????');
+// ------------------------------------
+//  Global Fields
+// ------------------------------------
 
-         main(
-               gi_host
-               :gi_port
-                              );
+//  Logger
+dcl-s g_hLogger like(prtLog_handle_t) inz;
 
-         // Close logger
-         //closeLogger();
+// ------------------------------------
+//  Globale Konstanten
+// ------------------------------------
+//
+// ------------------------------------
+//  Prototypes
+// ------------------------------------
 
-         *inlr = *on;
+dcl-pr PGM_ENTRY_POINT extpgm('PINGPORTR');
+  gi_host varchar(64) const;
+  gi_port int(10) const;
+end-pr;
 
-      /END-FREE
-      *
-      *===============================================================*
-      *  Test for errors and log them.
-      *===============================================================*
-     P isErrorMsg...
-     P                 B
-     D                 PI              N
-     D  i_msg                              const  likeds(msg_t    )
-      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      /FREE
+dcl-pr main;
+  i_host varchar(64) value;
+  i_port int(10) value;
+end-pr;
 
-         if i_msg.ID <> cMSG_ID_OK;
-            logMsg(i_msg);
-            return cTrue;
-         else;
-            return cFalse;
-         endif;
+//  Test for errors and log them.
+dcl-pr isErrorMsg ind;
+  i_msg likeds(msg_t) const;
+end-pr;
 
-      /END-FREE
-     P                 E
-      *
-      *===============================================================*
-      *  *** Private ***
-      *  Open Logger
-      *===============================================================*
-     P openLogger...
-     P                 B
-     D                 PI
-     D  i_layout                      1A   value
-     D  i_splF                       10A   value  varying
-     D  i_usrDta                     10A   value  varying
-      *
-      *  Helper fields
-     D cmd             S            256A   inz   varying
-      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      /FREE
+//  Open Logger
+dcl-pr openLogger;
+  i_layout char(1) value;
+  i_splF   varchar(10) value;
+  i_usrDta varchar(10) value;
+end-pr;
 
-         cmd = 'OVRPRTF ' +
-                  'FILE(PRTLOGP) '               +
-                  'LPI(6) '                      +
-                  'CPI(10) '                     +
-                  'OVRSCOPE(*ACTGRPDFN) '        +
-                  'SPLFNAME(' + i_splF + ') '    +
-                  'MAXRCDS(*NOMAX) '             +
-                  'USRDTA(''' + i_usrDta + ''') ';
+//  Logs a given string.
+dcl-pr log;
+  i_msgText varchar(256) const;
+end-pr;
 
-         if i_layout = 'P';
-            cmd = cmd + 'PAGESIZE(70 80) ' +
-                        'OVRFLW(64) ';
-         else;
-            cmd = cmd + 'PAGESIZE(49 132) ' +
-                        'OVRFLW(42) ';
-         endif;
+//  Logs a given message.
+dcl-pr logMsg;
+  i_msg likeds(msg_t) const;
+end-pr;
 
-         f_execute(cmd);
+//  Logs a monitored message.
+dcl-pr logMonitor likeds(msg_t);
+  i_text varchar(128) const;
+end-pr;
 
-         // Open logger
-         if f_opnPrtLog('Examinee: '+ i_usrDta: cFalse: g_hLogger);   //no scndl
-            log('######## Start of Test ########');
-         endif;
+//  Close Logger
+dcl-pr closeLogger;
+end-pr;
 
-      /END-FREE
-     P                 E
-      *
-      *===============================================================*
-      *  *** Private ***
-      *  Logs a given string.
-      *===============================================================*
-     P log...
-     P                 B
-     D                 PI
-     D  i_msgText                   256A   const  varying
-      *
-      *  Helper fields
-     D msg             DS                  likeds(msg_t   ) inz
-      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      /FREE
+//  Abrufen letzte Abbruch-Nachricht.
+dcl-pr rcvEscMsg likeds(msg_t);
+  i_stckCnt int(10) const;
+end-pr;
 
-         if i_msgText = '';
-            msg = f_newMsg(cMSG_ID_NONE: x'41');
-         else;
-            msg = f_newMsg(cMSG_ID_NONE: i_msgText);
-         endif;
+//  Abrufen Nachrichtentext für Nachricht.
+dcl-pr rtvMsgText varchar(1024);
+  i_msg likeds(msg_t) const;
+end-pr;
 
-         logMsg(msg);
+//  Sends a message to QCMD
+dcl-pr sndMsg;
+  i_text        varchar(128) value;
+  i_doSendToExt ind options(*nopass) value;
+end-pr;
 
-      /END-FREE
-     P                 E
-      *
-      *===============================================================*
-      *  *** Private ***
-      *  Logs a given message.
-      *===============================================================*
-     P logMsg...
-     P                 B
-     D                 PI
-     D  i_msg                              const  likeds(msg_t        )
-      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      /FREE
+//  Auflösen Hostname nach IP-Adresse
+dcl-pr resolveHost uns(10);
+  i_host pointer options(*string: *trim) const;
+end-pr;
 
-         f_wrtPrtLog(g_hLogger: i_msg);
+//===============================================================*
+//  Program Entry Point
+//===============================================================*
+dcl-pi PGM_ENTRY_POINT;
+  gi_host varchar(64) const;
+  gi_port int(10) const;
+end-pi;
 
-      /END-FREE
-     P                 E
-      *
-      *===============================================================*
-      *  *** Private ***
-      *  Logs a monitored message.
-      *===============================================================*
-     P logMonitor...
-     P                 B
-     D                 PI                         likeds(msg_t   )
-     D  i_text                      128A   const  varying
-      *
-      *  Funktionswert
-     D msg             DS                  likeds(msg_t        ) inz
-      *
-      *  Arbeitsfelder
-     D msgText         S           1024A   varying inz
-      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      /FREE
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-         msg = rcvEscMsg(2);
+//openLogger('L': sds.pgmName: '???????');
 
-         msgText = 'MONITOR: ' + i_text + ' - ' + rtvMsgText(msg);
+main(
+      gi_host
+      :gi_port
+                     );
 
-         log(msgText);
+// Close logger
+//closeLogger();
 
-         return msg;
+*inlr = *on;
 
-      /END-FREE
-     P                 E
-      *
-      *===============================================================*
-      *  *** Private ***
-      *  Close Logger
-      *===============================================================*
-     P closeLogger...
-     P                 B
-     D                 PI
-      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      /FREE
 
-         log('########  End of Test  ########');
+//===============================================================*
+//  Test for errors and log them.
+//===============================================================*
+dcl-proc isErrorMsg;
+  dcl-pi *n ind;
+    i_msg likeds(msg_t) const;
+  end-pi;
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-         // Close logger
-         f_cloPrtLog(g_hLogger);
+  if (i_msg.ID <> cMSG_ID_OK);
+    logMsg(i_msg);
+    return cTrue;
+  else;
+    return cFalse;
+  endif;
 
-         g_hLogger = *NULL;
+end-proc;
 
-      /END-FREE
-     P                 E
-      *
-      *===============================================================*
-      *  *** Private ***
-      *  Abrufen letzte Abbruch-Nachricht.
-      *===============================================================*
-     P rcvEscMsg...
-     P                 B
-     D                 PI                         likeds(msg_t    )
-     D  i_stckCnt                    10I 0 const
-      *
-      *  Funktionswert
-     D msg             DS                  likeds(msg_t    ) inz
-      *
-      *  Arbeitsfelder
-     D msgKey          S              4A   inz
-     D msgData         S            512A   inz varying
-      *
-     D rcvm0200        DS                  qualified inz
-     D  bytRet                       10I 0
-     D  bytAvl                       10I 0
-     D  msgSev                       10I 0
-     D  msgID                         7A
-     D  msgType                       2A
-     D  msgKey                        4A
-     D  msgF                         10A
-     D  msgLS                        10A
-     D  msgLU                        10A
-     D  sndJob                       10A
-     D  sndUsr                       10A
-     D  sndNbr                        6A
-     D  sndPgm                       12A
-     D  sndINb                        4A
-     D  sndDat                        7A
-     D  sndTim                        6A
-     D  rcvPgm                       10A
-     D  rcvINb                        4A
-     D  sndTyp                        1A
-     D  rcvTyp                        1A
-     D  reserved_01                   1A
-     D  cStIDTx                      10I 0
-     D  cStIDDt                      10I 0
-     D  alrOpt                        9A
-     D  ccsidMH                      10I 0
-     D  ccsidRD                      10I 0
-     D  lnRplDtR                     10I 0
-     D  lnRplDtA                     10I 0
-     D  lnMgR                        10I 0
-     D  lnMgA                        10I 0
-     D  lnMgHR                       10I 0
-     D  lnMgHA                       10I 0
-     D  value                      4096A
-      *
-     D errCode         DS                  qualified inz
-     D  bytPrv                       10I 0
-     D  bytAvl                       10I 0
-      *
-      *  Receive Program Message (QMHRCVPM) API
-     D QMHRCVPM        PR                         extpgm('QMHRCVPM')
-     D  o_rcvVar                  32767A          options(*varsize )
-     D  i_length                     10I 0 const
-     D  i_format                      8A   const
-     D  i_callStkE                   10A   const
-     D  i_callStkC                   10I 0 const
-     D  i_msgType                    10A   const
-     D  i_msgKey                      4A   const
-     D  i_wait                       10I 0 const
-     D  i_action                     10A   const
-     D  io_ErrCode                32767A          options(*varsize )
-      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      /FREE
+//===============================================================*
+//  *** Private ***
+//  Open Logger
+//===============================================================*
+dcl-proc openLogger;
+  dcl-pi *n;
+    i_layout char(1) value;
+    i_splF   varchar(10) value;
+    i_usrDta varchar(10) value;
+  end-pi;
 
-         QMHRCVPM(rcvm0200: %size(rcvm0200): 'RCVM0200': '*': i_stckCnt:
-                  '*ESCAPE': msgKey: 0: '*SAME': errCode);
+  //  Helper fields
+  dcl-s cmd varchar(256) inz;
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-         if rcvm0200.lnMgR > 0;
-            msgData = %subst(rcvm0200.value: 1: rcvm0200.lnMgR);
-         else;
-            msgData = '';
-         endif;
+  cmd = 'OVRPRTF ' +
+           'FILE(PRTLOGP) '               +
+           'LPI(6) '                      +
+           'CPI(10) '                     +
+           'OVRSCOPE(*ACTGRPDFN) '        +
+           'SPLFNAME(' + i_splF + ') '    +
+           'MAXRCDS(*NOMAX) '             +
+           'USRDTA(''' + i_usrDta + ''') ';
 
-         clear msg;
-         msg.file = rcvm0200.msgF;
-         msg.lib  = rcvm0200.msgLU;
-         msg.type = '*INFO';
-         msg.ID   = rcvm0200.msgID;
-         msg.data = msgData;
+  if (i_layout = 'P');
+    cmd = cmd + 'PAGESIZE(70 80) ' +
+                'OVRFLW(64) ';
+  else;
+    cmd = cmd + 'PAGESIZE(49 132) ' +
+                'OVRFLW(42) ';
+  endif;
 
-         return msg;
+  f_execute(cmd);
 
-      /END-FREE
-     P                 E
-      *
-      *===============================================================*
-      *  *** Private ***
-      *  Abrufen Nachrichtentext für Nachricht.
-      *===============================================================*
-     P rtvMsgText...
-     P                 B
-     D                 PI          1024A          varying
-     D  i_msg                                     const  likeds(msg_t   )
-      *
-      *  Funktionswert
-     D msgText         S           1024A   varying inz
-      *
-      *  Arbeitsfelder
-     D rtvm0100        DS                  qualified inz
-     D  bytRet                        9B 0
-     D  bytAvl                        9B 0
-     D  lenMsgRet                     9B 0
-     D  lenMsgAvl                     9B 0
-     D  lenHlpRet                     9B 0
-     D  lenHlpAvl                     9B 0
-     D  data                       4096A
-      *
-     D qMsgF           DS                  qualified inz
-     D  name                         10A
-     D  lib                          10A
-      *
-     D errCode         DS                  qualified inz
-     D  bytPrv                       10I 0
-     D  bytAvl                       10I 0
-      *
-      *  Retrieve Message (QMHRTVM) API
-     D QMHRTVM         PR                         extpgm('QMHRTVM')
-     D  o_msgInf                  32767A          options(*varsize )
-     D  i_length                     10I 0 const
-     D  i_format                      8A   const
-     D  i_msgID                       7A   const
-     D  i_qMsgF                      20A   const
-     D  i_rplData                 32767A   const  options(*varsize )
-     D  i_rpldataLen                 10I 0 const
-     D  i_rplVars                    10A   const
-     D  i_rtnCtrlChrs                10A   const
-     D  io_ErrCode                32767A          options(*varsize )
-      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      /FREE
+  // Open logger
+  if (f_opnPrtLog('Examinee: '+ i_usrDta: cFalse: g_hLogger));   //no scndl
+    log('######## Start of Test ########');
+  endif;
 
-         qMsgF.name = i_msg.file;
-         qMsgF.lib  = i_msg.lib;
+end-proc;
 
-         QMHRTVM(rtvm0100: %size(rtvm0100): 'RTVM0100': i_msg.ID: qMsgF:
-                 i_msg.data: %len(i_msg.data): '*YES': '*NO': errCode);
+//===============================================================*
+//  *** Private ***
+//  Logs a given string.
+//===============================================================*
+dcl-proc log;
+  dcl-pi *n;
+    i_msgText varchar(256) const;
+  end-pi;
 
-         if rtvm0100.lenMsgRet > 0;
-            msgText = %subst(rtvm0100.data: 1: rtvm0100.lenMsgRet);
-         else;
-            msgText = '';
-         endif;
+  //  Helper fields
+  dcl-ds msg likeds(msg_t) inz;
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-         return msgText;
+  if (i_msgText = '');
+    msg = f_newMsg(cMSG_ID_NONE: x'41');
+  else;
+    msg = f_newMsg(cMSG_ID_NONE: i_msgText);
+  endif;
 
-      /END-FREE
-     P                 E
-      *
-      *==================================================================*
-      *  Sends a message to the caller.
-      *==================================================================*
-     P sndMsg...
-     P                 B
-     D                 PI
-     D  i_text                      128A   value  varying
-     D  i_doSendToExt                  N   VALUE  options(*nopass)
-      *
-      *  Local fields
-     D msgKey          S              4A                        inz
-      *
-     D qMsgF           DS                  qualified            inz
-     D  name                         10A
-     D  lib                          10A
-      *
-     D errCode         DS                  qualified            inz
-     D  bytPrv                       10I 0
-     D  bytAvl                       10I 0
-     D  excID                         7A
-     D  reserved                      1A
-     D  excDta                      256A
-      *
-      *  Send Program Message (QMHSNDPM) API
-     D QMHSNDPM        PR                         extpgm('QMHSNDPM')
-     D   i_msgID                      7A   const
-     D   i_qMsgF                     20A   const
-     D   i_msgData                32767A   const  options(*varsize )
-     D   i_length                    10I 0 const
-     D   i_msgType                   10A   const
-     D   i_callStkE               32767A   const  options(*varsize )
-     D   i_callStkC                  10I 0 const
-     D   o_msgKey                     4A
-     D   io_ErrCode               32767A          options(*varsize )
-     D   i_lenStkE                   10I 0 const  options(*nopass  )
-     D   i_callStkEQ                 20A   const  options(*nopass  )
-     D   i_wait                      10I 0 const  options(*nopass  )
-     D   i_callStkEDT                10A   const  options(*nopass  )
-     D   i_ccsid                     10I 0 const  options(*nopass  )
-      * ---------------------------------------------------------
-      *
-      /FREE
+  logMsg(msg);
 
-         clear qMsgF;
-         qMsgF.name = 'QCPFMSG';
-         qMsgF.lib  = '*LIBL';
+end-proc;
 
-         clear errCode;
-         errCode.bytPrv = %size(errCode);
+//===============================================================*
+//  *** Private ***
+//  Logs a given message.
+//===============================================================*
+dcl-proc logMsg;
+  dcl-pi *n;
+    i_msg likeds(msg_t) const;
+  end-pi;
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-         if %parms() >= 2 and i_doSendToExt;
-            QMHSNDPM('CPF9897': qMsgF: i_text: %len(i_text): '*INFO'
-                     : '*CTLBDY': 1
-                     : msgKey: errCode);
-         else;
-            QMHSNDPM('CPF9897': qMsgF: i_text: %len(i_text): '*INFO'
-                     : '*CTLBDY': 0
-                     : msgKey: errCode);
-         endif;
+  f_wrtPrtLog(g_hLogger: i_msg);
 
-      /END-FREE
-     P                 E
-      *
-      *===============================================================*
-      *  Auflösen Hostname nach IP-Adresse
-      *===============================================================*
-     P resolveHost...
-     P                 B
-     D                 PI            10U 0
-     D  i_host                         *   const  options(*string: *trim)
-      *
-      *  Deklarieren Funktionswert
-     D ipAdrLong       S             10U 0 inz
-      *
-      *  Funktionslokale Felder
-     D tmpIpAdrLong    S                   like(ipAdrLong ) inz
-      *
-     D hostent         DS                  likeds(hostent_t) based(pHostent)
-     D p1HostAdr       S               *   based(hostent.h_addrlist)
-     D hostAdr         S             10U 0 based(p1HostAdr)
-      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      /FREE
+end-proc;
 
-         // Initialisieren Rückgabewerte
-         reset ipAdrLong;
+//===============================================================*
+//  *** Private ***
+//  Logs a monitored message.
+//===============================================================*
+dcl-proc logMonitor;
+  dcl-pi *n likeds(msg_t);
+    i_text varchar(128) const;
+  end-pi;
 
-         // SOLANGE BIS alles getan oder Fehler
-         dou 1=1;
+  //  Funktionswert
+  dcl-ds msg likeds(msg_t) inz;
 
-            // Umsetzen IP Adresse von xxx.xxx.xxx.xxx in 32-Bit Adresse (Long)
-            tmpIpAdrLong = inet_addr(i_host);
+  //  Arbeitsfelder
+  dcl-s msgText varchar(1024) inz;
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            // Wenn dies fehlschlägt, dann annehmen, dass der Host name als
-            // DNS Name übergeben wurde und versuchen, die IP Adresse
-            // anhand des Host-Namens zu ermitteln.
-            if tmpIpAdrLong = INADDR_NONE;
-               tmpIpAdrLong = 0;
-               pHostent = gethostbyname(i_host);
-               if pHostent <> *NULL;
-                  tmpIpAdrLong = hostAdr;
-               endif;
-            endif;
+  msg = rcvEscMsg(2);
 
-            if tmpIpAdrLong = 0;
-               sndMsg('Unknown host: ' + %str(i_host): cTrue);
-               leave;
-            endif;
+  msgText = 'MONITOR: ' + i_text + ' - ' + rtvMsgText(msg);
 
-            // Setzen Funktionswert
-            ipAdrLong = tmpIpAdrLong;
-         enddo;
+  log(msgText);
 
-         return ipAdrLong;
+  return msg;
 
-      /END-FREE
-     P                 E
-      *
-      *===============================================================*
-      *  Main procedure
-      *===============================================================*
-     P main...
-     P                 B
-     D                 PI
-     D i_host                        64A   value  varying
-     D i_port                        10I 0 value
-      *
-      *  Helper fields
-     D sd              S             10I 0 inz(-1)
-      *
-     D sockAddr        DS                  likeds(sockaddr_in_t)
-      * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      /FREE
+end-proc;
 
-         // Do until everything is done or an error occured
-         dou 1=1;
+//===============================================================*
+//  *** Private ***
+//  Close Logger
+//===============================================================*
+dcl-proc closeLogger;
+  dcl-pi *n;
+  end-pi;
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            // Erstellen Socket
-            sd = socket(AF_INET: SOCK_STREAM: IPPROTO_IP);
-            if (sd < 0);
-               sndMsg('Faild: socket()': cTrue);
-               leave;
-            endif;
+  log('########  End of Test  ########');
 
-            // Aufbauen Verbindung zum Server über gegebene Portnummer
-            sockAddr.sin_Family = AF_INET;
-            sockAddr.sin_Port   = i_port;
-            sockAddr.sin_addr   = resolveHost(i_host);
-            sockAddr.sin_zero   = *ALLx'00';
+  // Close logger
+  f_cloPrtLog(g_hLogger);
 
-            if (sockAddr.sin_addr = 0);
-               leave;
-            endif;
+  g_hLogger = *null;
 
-            if (connect(sd: %addr(sockAddr): %size(sockAddr)) = -1);
-               sndMsg('Failed to connect to host ' +
-                       i_host + ':' + %char(i_port): cTrue);
-               logRootCause();
-               leave;
-            endif;
+end-proc;
 
-            // Prima, klappt.
-            sndMsg('Connection to host ' + i_host + ':' + %char(i_port) +
-                   ' verified.': cTrue);
-         enddo;
+//===============================================================*
+//  *** Private ***
+//  Abrufen letzte Abbruch-Nachricht.
+//===============================================================*
+dcl-proc rcvEscMsg;
+  dcl-pi *n likeds(msg_t);
+    i_stckCnt int(10) const;
+  end-pi;
 
-         // Schließen Socket
-         if (sd <> -1);
-            callp close(sd);
-            reset sd;
-         endif;
+  //  Funktionswert
+  dcl-ds msg likeds(msg_t) inz;
 
-      /END-FREE
-     P                 E
-      *
-      *===============================================================*
-      *  Log root cause.
-      *===============================================================*
-     P logRootCause...
-     P                 B
-     D                 PI
-      *
-     D errorNbr        s             10i 0 based(pErrorNbr)
-     D errorText       s            128a   based(pErrorText)
-     D errorMessage    s            128a
-      /free
+  //  Arbeitsfelder
+  dcl-s msgKey char(4) inz;
+  dcl-s msgData varchar(512) inz;
 
-         pErrorNbr = errno();
-         if (pErrorNbr <> *null);
-           if (errorNbr <> 0);
-             pErrorText = strerror(errorNbr);
-             if (pErrorText <> *null);
-               errorMessage = %str(pErrorText: 128);
-               sndMsg('C-Error: ' + %trim(errorMessage));
-             endif;
-           endif;
-         endif;
+  dcl-ds rcvm0200 qualified inz;
+    bytRet      int(10);
+    bytAvl      int(10);
+    msgSev      int(10);
+    msgID       char(7);
+    msgType     char(2);
+    msgKey      char(4);
+    msgF        char(10);
+    msgLS       char(10);
+    msgLU       char(10);
+    sndJob      char(10);
+    sndUsr      char(10);
+    sndNbr      char(6);
+    sndPgm      char(12);
+    sndINb      char(4);
+    sndDat      char(7);
+    sndTim      char(6);
+    rcvPgm      char(10);
+    rcvINb      char(4);
+    sndTyp      char(1);
+    rcvTyp      char(1);
+    reserved_01 char(1);
+    cStIDTx     int(10);
+    cStIDDt     int(10);
+    alrOpt      char(9);
+    ccsidMH     int(10);
+    ccsidRD     int(10);
+    lnRplDtR    int(10);
+    lnRplDtA    int(10);
+    lnMgR       int(10);
+    lnMgA       int(10);
+    lnMgHR      int(10);
+    lnMgHA      int(10);
+    value       char(4096);
+  end-ds;
 
-      /end-free
-     P                 E
-      *
+  dcl-ds errCode qualified inz;
+    bytPrv int(10);
+    bytAvl int(10);
+  end-ds;
+
+  //  Receive Program Message (QMHRCVPM) API
+  dcl-pr QMHRCVPM extpgm('QMHRCVPM');
+    o_rcvVar   char(32767) options(*varsize);
+    i_length   int(10) const;
+    i_format   char(8) const;
+    i_callStkE char(10) const;
+    i_callStkC int(10) const;
+    i_msgType  char(10) const;
+    i_msgKey   char(4) const;
+    i_wait     int(10) const;
+    i_action   char(10) const;
+    io_ErrCode char(32767) options(*varsize);
+  end-pr;
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  QMHRCVPM(rcvm0200: %size(rcvm0200): 'RCVM0200': '*': i_stckCnt:
+           '*ESCAPE': msgKey: 0: '*SAME': errCode);
+
+  if (rcvm0200.lnMgR > 0);
+    msgData = %subst(rcvm0200.value: 1: rcvm0200.lnMgR);
+  else;
+    msgData = '';
+  endif;
+
+  clear msg;
+  msg.file = rcvm0200.msgF;
+  msg.lib  = rcvm0200.msgLU;
+  msg.type = '*INFO';
+  msg.ID   = rcvm0200.msgID;
+  msg.data = msgData;
+
+  return msg;
+
+end-proc;
+
+//===============================================================*
+//  *** Private ***
+//  Abrufen Nachrichtentext für Nachricht.
+//===============================================================*
+dcl-proc rtvMsgText;
+  dcl-pi *n varchar(1024);
+    i_msg likeds(msg_t) const;
+  end-pi;
+
+  //  Funktionswert
+  dcl-s msgText varchar(1024) inz;
+
+  //  Arbeitsfelder
+  dcl-ds rtvm0100 qualified inz;
+    bytRet    bindec(9);
+    bytAvl    bindec(9);
+    lenMsgRet bindec(9);
+    lenMsgAvl bindec(9);
+    lenHlpRet bindec(9);
+    lenHlpAvl bindec(9);
+    data      char(4096);
+  end-ds;
+
+  dcl-ds qMsgF qualified inz;
+    name char(10);
+    lib  char(10);
+  end-ds;
+
+  dcl-ds errCode qualified inz;
+    bytPrv int(10);
+    bytAvl int(10);
+  end-ds;
+
+  //  Retrieve Message (QMHRTVM) API
+  dcl-pr QMHRTVM extpgm('QMHRTVM');
+    o_msgInf      char(32767) options(*varsize);
+    i_length      int(10) const;
+    i_format      char(8) const;
+    i_msgID       char(7) const;
+    i_qMsgF       char(20) const;
+    i_rplData     char(32767) options(*varsize) const;
+    i_rpldataLen  int(10) const;
+    i_rplVars     char(10) const;
+    i_rtnCtrlChrs char(10) const;
+    io_ErrCode    char(32767) options(*varsize);
+  end-pr;
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  qMsgF.name = i_msg.file;
+  qMsgF.lib  = i_msg.lib;
+
+  QMHRTVM(rtvm0100: %size(rtvm0100): 'RTVM0100': i_msg.ID: qMsgF:
+          i_msg.data: %len(i_msg.data): '*YES': '*NO': errCode);
+
+  if (rtvm0100.lenMsgRet > 0);
+    msgText = %subst(rtvm0100.data: 1: rtvm0100.lenMsgRet);
+  else;
+    msgText = '';
+  endif;
+
+  return msgText;
+
+end-proc;
+
+//==================================================================*
+//  Sends a message to the caller.
+//==================================================================*
+dcl-proc sndMsg;
+  dcl-pi *n;
+    i_text        varchar(128) value;
+    i_doSendToExt ind options(*nopass) value;
+  end-pi;
+
+  //  Local fields
+  dcl-s msgKey char(4) inz;
+
+  dcl-ds qMsgF qualified inz;
+    name char(10);
+    lib  char(10);
+  end-ds;
+
+  dcl-ds errCode qualified inz;
+    bytPrv   int(10);
+    bytAvl   int(10);
+    excID    char(7);
+    reserved char(1);
+    excDta   char(256);
+  end-ds;
+
+  //  Send Program Message (QMHSNDPM) API
+  dcl-pr QMHSNDPM extpgm('QMHSNDPM');
+    i_msgID      char(7) const;
+    i_qMsgF      char(20) const;
+    i_msgData    char(32767) options(*varsize) const;
+    i_length     int(10) const;
+    i_msgType    char(10) const;
+    i_callStkE   char(32767) options(*varsize) const;
+    i_callStkC   int(10) const;
+    o_msgKey     char(4);
+    io_ErrCode   char(32767) options(*varsize);
+    i_lenStkE    int(10) options(*nopass) const;
+    i_callStkEQ  char(20) options(*nopass) const;
+    i_wait       int(10) options(*nopass) const;
+    i_callStkEDT char(10) options(*nopass) const;
+    i_ccsid      int(10) options(*nopass) const;
+  end-pr;
+  // ---------------------------------------------------------
+
+
+  clear qMsgF;
+  qMsgF.name = 'QCPFMSG';
+  qMsgF.lib  = '*LIBL';
+
+  clear errCode;
+  errCode.bytPrv = %size(errCode);
+
+  if (%parms() >= 2 and i_doSendToExt);
+    QMHSNDPM('CPF9897': qMsgF: i_text: %len(i_text): '*INFO'
+             : '*CTLBDY': 1
+             : msgKey: errCode);
+  else;
+    QMHSNDPM('CPF9897': qMsgF: i_text: %len(i_text): '*INFO'
+             : '*CTLBDY': 0
+             : msgKey: errCode);
+  endif;
+
+end-proc;
+
+//===============================================================*
+//  Auflösen Hostname nach IP-Adresse
+//===============================================================*
+dcl-proc resolveHost;
+  dcl-pi *n uns(10);
+    i_host pointer options(*string: *trim) const;
+  end-pi;
+
+  //  Deklarieren Funktionswert
+  dcl-s ipAdrLong uns(10) inz;
+
+  //  Funktionslokale Felder
+  dcl-s tmpIpAdrLong like(ipAdrLong) inz;
+
+  dcl-ds hostent likeds(hostent_t) based(pHostent);
+  dcl-s p1HostAdr pointer based(hostent.h_addrlist);
+  dcl-s hostAdr uns(10) based(p1HostAdr);
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  // Initialisieren Rückgabewerte
+  reset ipAdrLong;
+
+  // SOLANGE BIS alles getan oder Fehler
+  dou (1=1);
+
+    // Umsetzen IP Adresse von xxx.xxx.xxx.xxx in 32-Bit Adresse (Long)
+    tmpIpAdrLong = inet_addr(i_host);
+
+    // Wenn dies fehlschlägt, dann annehmen, dass der Host name als
+    // DNS Name übergeben wurde und versuchen, die IP Adresse
+    // anhand des Host-Namens zu ermitteln.
+    if (tmpIpAdrLong = INADDR_NONE);
+      tmpIpAdrLong = 0;
+      pHostent = gethostbyname(i_host);
+      if (pHostent <> *null);
+        tmpIpAdrLong = hostAdr;
+      endif;
+    endif;
+
+    if (tmpIpAdrLong = 0);
+      sndMsg('Unknown host: ' + %str(i_host): cTrue);
+      leave;
+    endif;
+
+    // Setzen Funktionswert
+    ipAdrLong = tmpIpAdrLong;
+  enddo;
+
+  return ipAdrLong;
+
+end-proc;
+
+//===============================================================*
+//  Main procedure
+//===============================================================*
+dcl-proc main;
+  dcl-pi *n;
+    i_host varchar(64) value;
+    i_port int(10) value;
+  end-pi;
+
+  //  Helper fields
+  dcl-s sd int(10) inz(-1);
+
+  dcl-ds sockAddr likeds(sockaddr_in_t);
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  // Do until everything is done or an error occured
+  dou (1=1);
+
+    // Erstellen Socket
+    sd = socket(AF_INET: SOCK_STREAM: IPPROTO_IP);
+    if (sd < 0);
+      sndMsg('Faild: socket()': cTrue);
+      leave;
+    endif;
+
+    // Aufbauen Verbindung zum Server über gegebene Portnummer
+    sockAddr.sin_Family = AF_INET;
+    sockAddr.sin_Port   = i_port;
+    sockAddr.sin_addr   = resolveHost(i_host);
+    sockAddr.sin_zero   = *allx'00';
+
+    if (sockAddr.sin_addr = 0);
+      leave;
+    endif;
+
+    if (connect(sd: %addr(sockAddr): %size(sockAddr)) = -1);
+      sndMsg('Failed to connect to host ' +
+              i_host + ':' + %char(i_port): cTrue);
+      logRootCause();
+      leave;
+    endif;
+
+    // Prima, klappt.
+    sndMsg('Connection to host ' + i_host + ':' + %char(i_port) +
+           ' verified.': cTrue);
+  enddo;
+
+  // Schließen Socket
+  if (sd <> -1);
+    callp close(sd);
+    reset sd;
+  endif;
+
+end-proc;
+
+//===============================================================*
+//  Log root cause.
+//===============================================================*
+dcl-proc logRootCause;
+  dcl-pi *n;
+  end-pi;
+
+  dcl-s errorNbr int(10) based(pErrorNbr);
+  dcl-s errorText char(128) based(pErrorText);
+  dcl-s errorMessage char(128);
+
+  pErrorNbr = errno();
+  if (pErrorNbr <> *null);
+    if (errorNbr <> 0);
+      pErrorText = strerror(errorNbr);
+      if (pErrorText <> *null);
+        errorMessage = %str(pErrorText: 128);
+        sndMsg('C-Error: ' + %trim(errorMessage));
+      endif;
+    endif;
+  endif;
+
+end-proc;
+
