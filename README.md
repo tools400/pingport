@@ -1,6 +1,6 @@
 # PINGPORT - A Tools/400 Utility
 
-DSPSRC is a utility for testing open ports on remote systems.
+PINGPORT is a utility for testing open ports on remote systems.
 
 ## Dependencies
 
